@@ -13,8 +13,8 @@
 
 1. Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/ВАШ_АККАУНТ/studentjobykt-backend.git
-   cd studentjobykt-backend
+   git clone https://github.com/ВАШАККАУНТ/studentjobykt-backend2
+   cd studentjobykt-backend2
 
 2. Установите зависимости:
    ```bash
@@ -44,7 +44,7 @@
 Для тестирования API используйте коллекцию Postman из папки `postman/`. Импортируйте её в Postman и настройте окружение с переменной `baseUrl`.
 
  Деплой
-Проект развёрнут на Vercel: [https://studentjobykt-backend.vercel.app](https://studentjobykt-backend.vercel.app)
+Проект развёрнут на Vercel: https://vercel.com/er-vsls-projects/studentjobykt-backend2-v5d5 (https://studentjobykt-backend2-v5d5.vercel.app/)
 ```
 
  3.2. Создай `API.md`
