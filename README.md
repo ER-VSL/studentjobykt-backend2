@@ -1,40 +1,267 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+ StudentJobYkt Backend
 
-## Getting Started
+Серверная часть платформы для поиска работы студентами в Якутске.
 
-First, run the development server:
+ Технологии
+- Next.js (API routes)
+- TypeScript
+- Prisma (PostgreSQL)
+- JWT аутентификация
+- Деплой на Vercel
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+ Локальный запуск
+
+1. Клонируйте репозиторий:
+   ```bash
+   git clone https://github.com/ВАШ_АККАУНТ/studentjobykt-backend.git
+   cd studentjobykt-backend
+
+2. Установите зависимости:
+   ```bash
+   npm install
+   ```
+
+3. Создайте файл `.env` на основе `.env.example` и заполните реальные данные:
+   - `DATABASE_URL` – строка подключения к Supabase (пулер, порт 6543)
+   - `JWT_SECRET` – секретный ключ
+
+4. Примените миграции (если работаете с новой базой):
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+
+5. Запустите сервер разработки:
+   ```bash
+   npm run dev
+   ```
+
+6. API будет доступно по адресу `http://localhost:3000/api`
+
+ Документация API
+Подробное описание всех эндпоинтов см. в файле [API.md](API.md).
+
+ Коллекция Postman
+Для тестирования API используйте коллекцию Postman из папки `postman/`. Импортируйте её в Postman и настройте окружение с переменной `baseUrl`.
+
+ Деплой
+Проект развёрнут на Vercel: [https://studentjobykt-backend.vercel.app](https://studentjobykt-backend.vercel.app)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ 3.2. Создай `API.md`
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+В корне создай файл `API.md` и опиши каждый эндпоинт. Пример оформления:
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```markdown
+ API Endpoints
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+Базовый URL: `http://localhost:3000/api` (или продакшен-URL)
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ Аутентификация
 
-## Learn More
+ `POST /auth/register`
+Регистрация нового пользователя.
 
-To learn more about Next.js, take a look at the following resources:
+Тело запроса:
+```json
+{
+  "email": "user@example.com",
+  "password": "123456",
+  "firstName": "Иван",
+  "lastName": "Петров",
+  "role": "STUDENT" // или "EMPLOYER"
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+Ответ: `201 Created` с объектом пользователя (без пароля).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Ошибки: `400` – неверные данные, `409` – email уже существует.
 
-## Deploy on Vercel
+ `POST /auth/login`
+Вход в систему.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Тело запроса:
+```json
+{
+  "email": "user@example.com",
+  "password": "123456"
+}
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+Ответ: `200 OK` с данными пользователя и установкой httpOnly cookie `token`.
+
+Ошибки: `401` – неверные учётные данные.
+
+ `GET /auth/me`
+Получение данных текущего пользователя.
+
+Заголовки: требуется авторизация (токен в cookie или Bearer).
+
+Ответ: `200 OK` с объектом пользователя.
+
+Ошибки: `401` – не авторизован.
+
+ Вакансии
+
+ `GET /vacancies`
+Получение списка вакансий с фильтрацией.
+
+Параметры запроса (query):
+- `search` – поиск по названию и описанию
+- `category` – ID категории
+- `employmentType` – тип занятости
+- `salaryMin` – минимальная зарплата
+- `salaryMax` – максимальная зарплата
+
+Ответ: `200 OK` с массивом вакансий в поле `data`.
+
+ `POST /vacancies`
+Создание новой вакансии (только работодатель или админ).
+
+Тело запроса:
+```json
+{
+  "title": "Название",
+  "description": "Описание",
+  "categoryId": "id_категории",
+  "employmentType": "FULL_TIME",
+  "salaryFrom": 30000,
+  "salaryTo": 50000,
+  "experience": "Без опыта",
+  "location": "Якутск"
+}
+```
+
+Ответ: `201 Created` с объектом вакансии.
+
+ `GET /vacancies/:id`
+Получение вакансии по ID.
+
+Ответ: `200 OK` с объектом вакансии.
+
+ `PUT /vacancies/:id`
+Обновление вакансии (владелец или админ).
+
+Тело запроса: любые обновляемые поля.
+
+Ответ: `200 OK` с обновлённым объектом.
+
+ `DELETE /vacancies/:id`
+Удаление вакансии (владелец или админ).
+
+Ответ: `204 No Content`.
+
+ Отклики
+
+ `GET /applications`
+Получение списка откликов. Для студента – его отклики, для работодателя – отклики на его вакансии.
+
+Ответ: `200 OK` с массивом откликов.
+
+ `POST /applications`
+Создание отклика на вакансию (только студент).
+
+Тело запроса:
+```json
+{
+  "vacancyId": "id_вакансии",
+  "coverLetter": "Сопроводительное письмо"
+}
+```
+
+Ответ: `201 Created` с объектом отклика.
+
+ `PUT /applications/:id`
+Обновление статуса отклика (только работодатель, владелец вакансии).
+
+Тело запроса:
+```json
+{
+  "status": "INVITED" // или "REJECTED"
+}
+```
+
+Ответ: `200 OK` с обновлённым откликом.
+
+ Избранное
+
+ `GET /favorites`
+Получение списка избранных вакансий (только студент).
+
+Ответ: `200 OK` с массивом вакансий.
+
+ `POST /favorites`
+Добавление вакансии в избранное (только студент).
+
+Тело запроса:
+```json
+{
+  "vacancyId": "id_вакансии"
+}
+```
+
+Ответ: `201 Created` с объектом избранного.
+
+ `DELETE /favorites/:vacancyId`
+Удаление вакансии из избранного (только студент).
+
+Ответ: `204 No Content`.
+
+ Компании
+
+ `GET /companies/me`
+Получение профиля компании текущего работодателя.
+
+Ответ: `200 OK` с объектом компании.
+
+ `PUT /companies/me`
+Обновление профиля компании (работодатель).
+
+Тело запроса: поля `name`, `description`, `industry`, `contactEmail`, `phone`, `website`, `logo`.
+
+Ответ: `200 OK` с обновлённым объектом.
+
+ `GET /companies/:id`
+Публичное получение информации о компании.
+
+Ответ: `200 OK` с объектом компании и её активными вакансиями.
+
+ Пользователи (только для админа)
+
+ `GET /users`
+Получение списка всех пользователей.
+
+Ответ: `200 OK` с массивом пользователей.
+
+ `GET /users/:id`
+Получение пользователя по ID (сам пользователь или админ).
+
+Ответ: `200 OK` с объектом пользователя.
+
+ `PUT /users/:id`
+Обновление данных пользователя (сам пользователь или админ).
+
+Тело запроса: поля `firstName`, `lastName`, `phone`.
+
+Ответ: `200 OK` с обновлённым объектом.
+```
+
+ 3.3. Экспортируй коллекцию Postman
+
+1. В Postman выбери коллекцию `StudentJobYkt API`.
+2. Нажми на троеточие (`…`) → Export.
+3. Выбери формат Collection v2.1 и нажми Export.
+4. Сохрани файл `StudentJobYkt API.postman_collection.json` в папку `postman/` твоего проекта (если папки нет – создай).
+5. Добавь этот файл в репозиторий (`git add postman/`).
+
+Теперь в `README.md` можно указать ссылку на эту папку.
+
+ 3.4. Закоммить документацию
+
+Выполни:
+
+```bash
+git add README.md API.md postman/
+git commit -m "docs: add API documentation and Postman collection"
+git push
+```
+На этом всё
