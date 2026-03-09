@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  role           Role      @default(STUDENT)
+  firstName      String?
+  lastName       String?
+  phone          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  studentProfile StudentProfile?
+  company        Company?
+  applications   Application[]
+  favorites      Favorite[]
+}
+
+model StudentProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  education     String?
+  specialty     String?
+  course        Int?
+  skills        String[]
+  about         String?
+  resumeUrl     String?
+}
+
+model Company {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  name           String
+  description    String?
+  industry       String?
+  contactEmail   String?
+  phone          String?
+  website        String?
+  logo           String?
+  vacancies      Vacancy[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  vacancies   Vacancy[]
+}
+
+model Vacancy {
+  id             String        @id @default(cuid())
+  companyId      String
+  company        Company       @relation(fields: [companyId], references: [id])
+  title          String
+  description    String
+  categoryId     String?
+  category       Category?     @relation(fields: [categoryId], references: [id])
+  employmentType EmploymentType
+  salaryFrom     Int?
+  salaryTo       Int?
+  experience     String?
+  location       String
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  applications   Application[]
+  favoritedBy    Favorite[]
+}
+
+model Application {
+  id          String        @id @default(cuid())
+  studentId   String
+  student     User          @relation(fields: [studentId], references: [id])
+  vacancyId   String
+  vacancy     Vacancy       @relation(fields: [vacancyId], references: [id])
+  status      ApplicationStatus @default(PENDING)
+  coverLetter String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Favorite {
+  studentId   String
+  student     User     @relation(fields: [studentId], references: [id])
+  vacancyId   String
+  vacancy     Vacancy  @relation(fields: [vacancyId], references: [id])
+
+  @@id([studentId, vacancyId])
+}
+
+enum Role {
+  STUDENT
+  EMPLOYER
+  ADMIN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+  PRACTICE
+}
+
+enum ApplicationStatus {
+  PENDING
+  INVITED
+  REJECTED
+}
